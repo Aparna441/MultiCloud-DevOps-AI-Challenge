@@ -1,43 +1,239 @@
 ## Key Outcomes
 
-The session provided a comprehensive introduction to **AWS Relational Database Service (RDS)** and general database concepts, emphasizing the transition from manual VM-based installations to **Platform as a Service (PaaS)** . Students learned to provision **PostgreSQL** and **MySQL** instances using the AWS Console, focusing on security best practices such as keeping databases in **private subnets** and using **jump hosts** (bastion servers) for access .
+The session introduced AWS RDS as a fully managed PaaS relational database service, covering why databases must remain private, the differences between relational and non-relational databases, and practical creation of Postgres and MySQL RDS instances. Students explored key database engines (MySQL, Oracle, MongoDB, Cassandra), their use cases, and best practices for security, backups, and monitoring. Two live RDS databases were created and deleted during the session to demonstrate the full provisioning workflow. 
 
-## Database Fundamentals
+---
 
-- **Relational vs. Non-Relational**: Relational databases use rows, columns, and predefined schemas (SQL), while non-relational databases (NoSQL) handle unstructured data, often using JSON formats or key-value pairs .
-- **Popular Engines**:
-    - **MySQL**: Open-source, widely used for e-commerce and accounting systems .
-    - **Oracle**: Enterprise-grade, expensive, and preferred for banking due to high security and support .
-    - **MongoDB**: Ideal for evolving schemas and gaming sessions .
-    - **Cassandra**: Designed for high-volume read/write operations and IoT data .
-- **Time Series Data**: Specialized databases (e.g., **Prometheus**) are used for monitoring data that changes every second .
+## Decisions Made
 
-## AWS RDS Technical Details
+- **Recording method changed to local laptop** for this week; all automations will fail as a result, so students must check recording links directly from the **LMS** rather than relying on automatic sync. 
+- **MySQL chosen as the primary practical database** for the batch; Postgres was also demonstrated live. 
+- **Databases must always be kept private**, never public-facing, due to SQL injection risks, bot attacks, and compliance requirements (HIPAA, PCI DSS, SOX). 
+- **Auto-generated passwords** recommended during RDS setup; password is visible only once and must be copied immediately. 
+- **Delete protection should be enabled in production** but was left unchecked during the demo for ease of deletion. 
 
-- **PaaS Advantage**: RDS automates hardware provisioning, OS patching, backups, and failure detection, reducing the need for dedicated DBA teams .
-- **Amazon Aurora**: An enterprise-level AWS database that is 5x faster than standard MySQL, supports up to 128 TB of storage, and replicates data across three availability zones .
-- **Configuration Highlights**:
-    - **Default Port**: MySQL uses port **3306** .
-    - **Scaling**: Supports **vertical scaling** (increasing CPU/Memory) via a single click in the console .
-    - **Connectivity**: Databases should be set to **Public Access: No** to prevent SQL injections and unauthorized internet access .
-    - **Maintenance**: Backups and maintenance windows should be scheduled during non-business hours to minimize impact .
+---
 
-## Practical Implementation
+## Topics Covered
 
-- **Provisioning Process**: The instructor demonstrated creating databases using **Full Configuration** and **Free Tier** settings .
-- **Authentication**: Support for both standard database passwords and **IAM database authentication** .
-- **Endpoints**: RDS provides a **hostname/endpoint** rather than a direct IP address to connect applications to the database .
+### Why Databases Are Required
+
+- Store data in an **organized, structured, and persistent** way. 
+- Enable **fast searching, sorting, and retrieval** beyond human memory capacity. 
+- Support **multi-user access** and collaborative productivity. 
+- Power **data-driven decisions**: over 90% of business decisions are based on data; companies use purchase history, behavior, and patterns to drive automation and personalization. 
+- Prevent **major business loss** from data loss; databases are described as "company gold." 
+
+### Types of Databases
+
+Three major categories were identified: 
+
+**Relational Databases (SQL)**
+
+- Data stored in **rows and columns** (tables); relationships exist between tables. 
+- Terminology: tables = *relations*, columns = *attributes*, rows = *tuples* — use these terms in interviews. 
+- Examples: **MySQL, Oracle, PostgreSQL, MariaDB, SQL Server**. 
+- Best for: predefined schemas, transactional systems (accounting, e-commerce, inventory). 
+
+**Non-Relational Databases (NoSQL)**
+
+- No fixed schema; data stored as **documents (JSON), key-value pairs, graphs, or column families**. 
+- Examples: **MongoDB, Cassandra, Redis**. 
+- Best for: unstructured or evolving data, applications where schema is unknown upfront. 
+
+**Time-Series Databases**
+
+- Data changes **every second** (e.g., stock market, monitoring metrics, IoT sensor readings). 
+- Most popular example: **Prometheus** — to be covered in upcoming practicals. 
+- Standard relational databases are not scalable enough for this use case. 
+
+---
+
+### Database Deep Dives
+
+**MySQL**
+
+- Open-source, free, one of the most widely used databases globally. 
+- Supports all major platforms (Linux, Windows, Mac) and all major programming languages (Node.js, PHP, Python, Java, Ruby, etc.). 
+- Comes with backup/restore utilities: `mysqldump` and `mysqlrestore`. 
+- **Default port: 3306** — critical interview fact. 
+- Supports multiple storage engines (e.g., InnoDB). 
+- Can be installed locally for testing; also available as RDS managed service. 
+- A **Bastion/Jump Host EC2 instance** with MySQL client installed is used to connect to a private RDS instance. 
+
+**Oracle**
+
+- **Not free; enterprise-licensed** — standard and enterprise editions available. 
+- Leader in **banking and enterprise** domains due to critical support SLAs. 
+- Provides advanced features: **encryption, wallet, Data Guard, RRAC, replication**. 
+- Oracle team available for direct support when issues arise. 
+- Key difference from MySQL: Oracle supports multiple databases under one instance; MySQL uses a single instance with multiple schemas. 
+
+**MongoDB**
+
+- Open-source, released from **2018** as community edition. 
+- Stores data in **JSON format** (document-based). 
+- Best choice when: schema is undefined, schema is constantly evolving, or data is unstructured. 
+- Use cases: gaming session storage, e-commerce (products with different attributes), leaderboards. 
+- Provides **auto-scaling and sharding** (replication-like feature). 
+- Queries are simple and highly efficient. 
+
+**Cassandra**
+
+- Developed by **Apache**; designed for **high-volume read/write operations**. 
+- Best for **IoT devices** — different vendors produce different schemas, and Cassandra handles heterogeneous data from multiple sources in a single database. 
+- Real-world use case shared: used at Wipro for **Saudi project sensor data** — temperature and other sensors from different countries/vendors, all maintained centrally. 
+- Supports **horizontal scaling** by adding nodes; peer-to-peer architecture. 
+- Free to use; handles unstructured/documented data. 
+
+---
+
+### Why Databases Cannot Be Public
+
+- Public databases expose systems to **SQL injection, bots, and unauthorized data harvesting**. 
+- Compliance frameworks (**HIPAA, PCI DSS, SOX**) prohibit direct internet-facing databases. 
+- All traffic must be **encrypted**; activity must be logged and auditable. 
+
+**Best Practices Discussed:** 
+
+- Always place database in a **private subnet** within a VPC
+- Connect via a **Jump Host / Bastion Server / Proxy Server** (not directly from the internet) 
+- **Restrict security groups** — apply least privilege
+- Enable **enhanced monitoring** (basic + advanced)
+- Store passwords securely in **vaults**
+- Enable **encryption** (encryption algorithms)
+- Maintain **automated backups**
+- Deploy across **multiple Availability Zones**
+
+---
+
+### Architecture Overview
+
+The session presented a target architecture: 
+
+- **Internet → NAT Gateway → AWS VPC**
+- VPC contains: public subnets (with Internet Gateway) + private subnets
+- **EC2 instance** (Jump Host) sits in the public subnet
+- **RDS** sits in the private subnet — accessible only via EC2
+- Security groups act as firewalls; route tables manage internal routing
+
+**Jump Host aliases used in industry:** Jump Server, Jump Box, Bastion Host, Proxy Server, DMZ (zone distinction noted — RDP is a separate protocol). 
+
+---
+
+### Traditional vs. Managed Database (RDS)
+
+**Self-managed (on-premises or EC2)** requires manual handling of: 
+
+- Power, hardware, OS installation and patching
+- Database software installation and patching
+- High availability, scaling, backup, DBA team management
+
+**AWS RDS (PaaS)** automates all of the above with one click: 
+
+- Provisioning, resizing, multi-AZ deployment
+- Read replicas, automated minor version updates
+- Performance monitoring, enterprise-level security
+- Backup and recovery, patching
+- Result: **DBA roles are being reduced** as cloud engineers handle everything via GUI
+
+---
+
+### AWS RDS — Practical Walkthrough
+
+**Supported Engines in RDS (7 options):** 
+
+- Aurora (MySQL-compatible), Aurora (PostgreSQL-compatible), MySQL, PostgreSQL, MariaDB, Oracle, Microsoft SQL Server, IBM DB2
+
+**Aurora vs. Standard RDS — Key Differences:** 
+
+- Aurora automatically increases storage; standard RDS requires manual storage increases
+- Aurora is **log-structured**: every write is stored in **3 Availability Zones = 6 copies**
+- Aurora is **5x faster** than standard MySQL; supports up to **128 TB** database size 
+- Data replication syncs in **10 milliseconds** vs. typical ~3 seconds in standard setups 
+- Aurora = enterprise-level MySQL/Postgres; standard RDS = single-instance managed service
+
+**PostgreSQL — Key Facts:** 
+
+- One of the most advanced open-source relational databases; ~35 years old
+- Object-oriented programming concepts integrated into PL/SQL
+- Stores data in page format for fast retrieval
+- Current version in RDS: **18.3**
+
+**Live Demo — Creating a Postgres RDS Instance (steps):** 
+
+1. Navigate to RDS → Create Database → **Full Configuration**
+2. Select engine: **PostgreSQL**
+3. Template: **Free Tier**
+4. Database identifier: `database-1`
+5. Enable **auto-generate password**
+6. Authentication: **Password + IAM database authentication**
+7. Instance size: default (learning purpose)
+8. **Public access: No** (always private)
+9. Click **Create Database** — ready in 2–4 minutes
+10. View credentials once (copy immediately — shown only one time) 
+
+**Live Demo — Creating a MySQL RDS Instance (additional config explored):** 
+
+- Engine: MySQL, Version: **8.x**
+- **Storage auto-scaling**: enable with one click; scales from 20 GB to 1,000 GB automatically 
+- Auto-scaling type: **vertical scaling** (same instance, increased size) 
+- **Port: 3306** (default; not changed in real-time environments) 
+- **Logging options**: Audit log, Error log, General log, IAM log, Slow query log — all enableable with one click 
+- **Backup retention**: recommended **30–60 days**, max 90 days; logs can be exported to CloudWatch 
+- **Backup window**: schedule during **non-business hours** (e.g., Saturday/Sunday, 5 AM UTC) 
+- **Maintenance window**: separate from backup window — do not overlap; max 2-hour window 
+- **Delete protection**: enable in production to prevent accidental deletion 
+- **Endpoint**: acts as hostname/IP address for application connection strings 
+
+**Deleting an RDS Instance:** 
+
+- Select database → Actions → Delete
+- Choose whether to take a final snapshot (not needed for test instances)
+- Confirm acknowledgment → deletion is **permanent and unrecoverable**
+
+---
+
+### Backup & Restore from S3
+
+- RDS snapshots are stored in S3 by default (AWS-managed backend). 
+- To restore an on-premises Oracle/MySQL database from S3: use **dump files** (`mysqldump` / Oracle equivalent), download from S3, then run restore command on target. 
+- S3 storage class for backups: **Standard** by default; Glacier for cost-saving archival. 
+- Option in RDS console: **"Restore from S3"** — available as a direct button. 
+- Postgres backups in production confirmed by attendee to go directly to S3. 
+
+---
+
+## Pending Confirmation
+
+- Students who created RDS or other AWS resources (Terraform-provisioned infra, Aurora instances) must **run** **`terraform destroy`** and manually delete databases to avoid ongoing billing charges. 
+- Students encountering **403 errors** (invalid security token) on S3 static website or GitBash operations should raise a **support ticket** — likely an account verification issue taking up to 24 hours. 
+- **Route 53 availability** on free/POC accounts — one student reported an error; Vikas suggested checking the AWS console directly and raising a ticket if blocked. 
+- **ECS overview** requested by a student — deferred to the Kubernetes session; ECS to be covered alongside Kubernetes. 
+- **ELB (classic load balancer)** topic noted as pending from a previous session. 
+
+---
+
+## Open Questions
+
+- **Can Cassandra be used for live traffic?** — Confirmed yes; it is designed for real-time, high-volume read/write. 
+- **IAM user billing** — IAM users themselves do not incur charges; charges apply only when compute resources (CPU, memory, storage) are consumed. 
+- **NTLM vs. Kerberos authentication** — raised by a student in context of banking applications; Kerberos uses cryptographic keys for encryption and handshake; NTLM is Windows-specific. Both are authentication protocols usable beyond Windows. 
+- **Database pipeline in JD** — clarified as CI/CD pipeline deploying an application that interacts with a database, not a database-specific pipeline concept. 
+- **Sandbox vs. Free Tier** — confirmed as the same; POC accounts labeled "Sandbox" allow create/destroy experimentation. 
+
+---
 
 ## Action Items
 
-- **All Students**: Record a summary of what was learned in the session to build communication confidence for interviews .
-- **Students with Terraform deployments**: Run `terraform destroy` to avoid unnecessary AWS billing .
-- **Students with 403 errors**: Raise a support ticket with AWS to verify account status .
+- **All students:** Check LMS directly for recording links this week — automation sync is broken due to local recording method. 
+- **All students:** Delete any RDS instances, Aurora databases, or Terraform-provisioned infrastructure created during or after the session to stop billing. 
+- **All students:** Practice speaking 5 key points about each database (MySQL, Oracle, MongoDB, Cassandra, RDS) for interview readiness. 
+- **Students with 403/token errors:** Raise a support ticket via the LMS support system. 
+- **Vikas:** Add RDS to student resumes after 2 practicals are completed. 
+- **Vikas:** Schedule **reverse critique / extra sessions** where students present and explain topics instead of a standard class — Linux session confirmed as one candidate. 
+- **Vikas:** Cover Kubernetes and ECS together in an upcoming session. 
 
-# AWS RDS Interview Preparation Cheatbook
-## Batch-45 | Day-7 | 13 October 2026
-
-This cheatbook is based on the AWS RDS session notes. It includes **20 interview questions with answers** and **20 scenario-based questions with answers**. Some answers add standard AWS RDS best practices to make the material more useful for interview preparation.
 
 ---
 
