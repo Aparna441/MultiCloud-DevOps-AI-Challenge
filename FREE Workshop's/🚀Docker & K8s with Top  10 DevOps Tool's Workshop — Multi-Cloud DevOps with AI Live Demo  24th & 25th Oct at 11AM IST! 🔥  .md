@@ -18,6 +18,13 @@ A 4+ hour live interactive session covering Docker fundamentals and a Kubernetes
 
 ### Docker Architecture & Core Concepts
 
+### VM Creation on GCP
+
+- Three methods to create a VM discussed: **UI/Console**, **CLI (gcloud commands)**, **REST API**, **Terraform**, and **Jenkins pipelines** 
+- GCP's **"Equivalent Code"** feature auto-generates CLI and Terraform code from UI configurations — useful when UI access is unavailable in companies 
+- **CloudShell** demonstrated as a browser-based terminal within GCP console requiring no local setup 
+- AWS EC2 = GCP Compute Engine (conceptually equivalent); same workflow applies across clouds with different command syntax 
+
 - **Docker definition:** Open-source platform to build, ship, and run containers; a containerizing tool that moves applications across environments. 
 - **Three architectural components:**
     - **Client** — where Docker commands are executed (terminal) 
@@ -31,7 +38,14 @@ A 4+ hour live interactive session covering Docker fundamentals and a Kubernetes
 - **Docker image** = packaged artifact built from Dockerfile (`docker build -t <name> .`) 
 - **Container** = running instance of an image (`docker run <image-name>`) 
 - **Docker Hub** = default public registry; alternatives include **ECR** (AWS Elastic Container Registry), **GCR** (Google Container Registry), **ACR** (Azure Container Registry), **Nexus** 
-- Images can also be archived to S3 using `docker save` → tar file → `aws s3 cp` 
+- Images can also be archived to S3 using `docker save` → tar file → `aws s3 cp`
+
+- ### Docker Architecture (Three-Part Flow)
+
+- **Client** → where commands are run (terminal) 
+- **Docker Host / Daemon** → background service on the VM/node managing Docker operations; daemon checks local cache first, then pulls from registry if image is absent 
+- **Registry (Docker Hub)** → remote image repository 
+- Live demonstration using `docker run hello-world` showed the full flow: client sends command → daemon checks locally → pulls from Docker Hub → creates container → streams output to client; completed in **527 milliseconds** 
 
 ### Key Docker Commands Covered
 
@@ -87,7 +101,15 @@ A 4+ hour live interactive session covering Docker fundamentals and a Kubernetes
 - **Deploy Jenkins on Kubernetes:** `kubectl run jenkins --image=jenkins/jenkins` → pod created in ~59 seconds. 
 - **Expose Jenkins externally:** Via Kubernetes Service (Load Balancer type, port 8080) — required because Kubernetes pods are internal by default. 
 - **`kubectl describe pod jenkins`** used to inspect pod details and IP. 
-- **Kubeconfig** stores cluster connectivity information (endpoint, credentials, context); used to switch between clusters. 
+- **Kubeconfig** stores cluster connectivity information (endpoint, credentials, context); used to switch between clusters.
+
+- ### Jenkins Deployment on Kubernetes
+
+- Jenkins deployed as a **pod** on the Kubernetes cluster using `kubectl run jenkins --image=jenkins/jenkins` 
+- Pod status checked with `kubectl get pods` and detailed with `kubectl describe pod jenkins` 
+- To expose Jenkins externally, a **LoadBalancer service** was created (port 8080) — necessary because Kubernetes pods are internal by default 
+- Service exposed via GKE UI → Workloads → Jenkins → Expose → Port 8080 → Load Balancer type 
+- External IP assigned after service creation; Jenkins UI accessible via `http://<external-ip>:8080` 
 
 ### End-to-End DevOps Workflow Explained
 
@@ -122,7 +144,15 @@ A 4+ hour live interactive session covering Docker fundamentals and a Kubernetes
 - Use phrase **"In my company, we use Docker for..."** rather than referencing YouTube or courses — sounds genuine. 
 - Narrow technology profiles (e.g., Pega-only) are harder to place; combine with cloud (e.g., "Pega running on AWS EC2/Kubernetes") to broaden appeal. 
 - For 90-day notice periods: tell HRs you are on bench and can join in 30 days — bench managers often release faster. 
-- Create **multiple profiles on Naukri** with different technology emphasis (e.g., Azure DevOps on one, AWS DevOps on another) to increase call volume. 
+- Create **multiple profiles on Naukri** with different technology emphasis (e.g., Azure DevOps on one, AWS DevOps on another) to increase call volume.
+
+- ### Job Search Tips Shared
+
+- Multiple Naukri profiles (one per technology stack, e.g., Azure DevOps + AWS DevOps) can significantly increase call volume — one participant reported 4–5 calls/day from Naukri alone 
+- LinkedIn filters recommended: **Under 10 applicants**, **Past 24 hours**, **Easy Apply** — targets fresh postings before competition builds 
+- **Walk-in interviews** recommended for same-day offers, especially in metro cities (Bangalore, Pune) 
+- Platforms mentioned: Naukri, LinkedIn, Indeed, Glassdoor, Internshala, TopHire, Flexi Jobs 
+- Framing experience: Use "In my company, we use Docker for building containers..." to make knowledge sound genuine and applied 
 
 ### Job Portal Filters
 
@@ -137,6 +167,13 @@ A 4+ hour live interactive session covering Docker fundamentals and a Kubernetes
 - Instructor's view: candidates with genuine skills do receive calls and offers at these levels. 
 - For experienced professionals switching to DevOps: minimum expected package should match years of experience (e.g., 14-year professional → minimum ₹14 LPA). 
 - Confidence building: practice speaking technical concepts aloud; record WhatsApp voice messages explaining Docker architecture. 
+
+### Best Practices Highlighted
+
+- Always run `sudo apt-get update` before `sudo apt install docker.io -y` to ensure packages are up to date — framed as a **production/interview best practice** (patching activity) 
+- Docker version verified with `docker -v`; session used **version 29.1.3** 
+- Use **Ubuntu 24.04 LTS** (Long-Term Support = stable version) for production environments 
+- **Container Optimized OS (COS)** is the preferred OS for Kubernetes nodes, not standard Ubuntu — optimized specifically for running containers 
 
 ---
 
@@ -165,12 +202,7 @@ A 4+ hour live interactive session covering Docker fundamentals and a Kubernetes
 8–10. AI/MLOps/AIOps, MCP Server, Agentic AI projects 
 - **Additional topics:** Python & Shell scripting automation (5 practicals), resume building, extra Azure sessions, Generative AI/Copilot integration 
 
-### Pricing (Session Offer)
 
-- Special offer during session: **₹29,000** (promo code applied, ~20% discount) 
-- Offer closed at end of session; standard price reverted to **₹34,000 + GST (~₹39,000)** 
-- Payment via UPI (instructor's number: 9993445100) or website; EMI option available (₹15K upfront + ₹15K later) 
-- Confirmed enrollees during session: Praveen, Avishek (Debroy), Avishek Kumar, Amit Kumar, Srinivasan, and others 
 
 ### Instructor Background
 
@@ -184,7 +216,7 @@ A 4+ hour live interactive session covering Docker fundamentals and a Kubernetes
 
 ## Action Items
 
-- **All participants:** Post LinkedIn feedback tagging instructor (`@Vikas Satnawat` + `@CloudDevOpsHub`) with session photo to receive recording by 6 PM. 
+- **All participants:** Post LinkedIn feedback tagging instructor (`@Vikas Ratnawat` + `@CloudDevOpsHub`) with session photo to receive recording by 6 PM. 
 - **All participants:** Join WhatsApp group (link shared in Zoom chat) for notes, recordings, and support. 
 - **GCP account pending participants (Ankush, Akash, Gopal):** Make ₹500–₹1,000 prepayment to Google to complete account verification. 
 - **Payment error participants (Dharmveer, others):** Change payment method or enable international transactions on bank account. 
