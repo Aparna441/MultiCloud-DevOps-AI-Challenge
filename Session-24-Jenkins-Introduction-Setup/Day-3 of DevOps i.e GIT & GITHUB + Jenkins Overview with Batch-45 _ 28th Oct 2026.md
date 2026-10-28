@@ -220,4 +220,181 @@ Key reasons (interview-ready answer):
 
 - How to design multi-branch deployment pipelines in GitHub (feature → UAT → main → production) with branch protection rules preventing direct publishing from feature branches — discussed conceptually; full implementation to be covered in Jenkins sessions 
 - Kubernetes architecture deep-dive (API server flow when applying deployment YAML, multi-region deployments using node affinity/selectors) — raised by a student post-interview; flagged for upcoming Kubernetes class 
-- DevSecOps vs. DevOps pipeline differences — briefly addressed: security tools added on top of existing DevOps pipeline; transition happens after DevOps is stable 
+- DevSecOps vs. DevOps pipeline differences — briefly addressed: security tools added on top of existing DevOps pipeline; transition happens after DevOps is stable
+
+# Day-3 DevOps Interview Preparation
+## Git & GitHub + Jenkins Overview
+**Based on:** Batch-45 session notes — 28 October 2026
+
+This document contains 20 technical interview questions with answers and 20 scenario-based questions with practical answers. Topics are based on the session notes.
+
+---
+
+# Part 1: 20 Technical Interview Questions and Answers
+
+### 1. What is the difference between a public and a private GitHub repository?
+**Answer:** A public repository can be viewed by anyone. A private repository restricts access to authorized users. Repository visibility can be changed from the repository settings, and GitHub may require verification for sensitive changes.
+
+### 2. How do you give another developer access to a GitHub repository?
+**Answer:** Open the repository's **Settings → Collaborators**, choose **Add people**, and invite the developer using their GitHub account or email. They must accept the invitation. Grant only the access level they need.
+
+### 3. What is a Pull Request (PR)?
+**Answer:** A Pull Request proposes changes from one branch to another, such as a feature branch into `main`. It gives teammates a place to review code, discuss changes, run checks, and approve the merge.
+
+### 4. What are branch protection rules?
+**Answer:** Branch protection rules apply safeguards to important branches. Examples include requiring a pull request, approvals, successful status checks, resolved review conversations, or signed commits before changes can be merged.
+
+### 5. Why should teams prevent direct pushes to `main`?
+**Answer:** Preventing direct pushes encourages code review and automated checks before changes enter the shared stable branch. It reduces the risk of unreviewed or broken code reaching the main branch.
+
+### 6. What are required status checks?
+**Answer:** Required status checks are automated checks—such as a build or test job—that must pass before a protected branch can accept a merge. Jenkins can provide these checks when integrated with GitHub.
+
+### 7. What is a GitHub webhook?
+**Answer:** A webhook sends an event notification from GitHub to another system when an event occurs, such as a code push. Jenkins can receive that notification and trigger a pipeline.
+
+### 8. What is Poll SCM in Jenkins?
+**Answer:** Poll SCM makes Jenkins check a source repository at configured intervals to see whether changes have occurred. If it detects changes, the configured job can run. Unlike a webhook, it relies on periodic checks.
+
+### 9. What is Continuous Integration (CI)?
+**Answer:** CI is the practice of automatically building and testing code when developers integrate changes into a shared repository. It gives developers faster feedback when a change causes a build or test failure.
+
+### 10. How does CI improve on a traditional manual build process?
+**Answer:** In a manual process, a person may run builds at fixed times, delaying feedback. CI automates builds and tests after changes are pushed, helping teams discover problems sooner and reducing manual effort.
+
+### 11. Why was Jenkins selected for the sessions?
+**Answer:** The session notes highlight that Jenkins is open-source, supports many community plugins, works across operating systems, supports scripted pipelines, and has strong community support.
+
+### 12. Is Jenkins only a graphical user interface tool?
+**Answer:** No. Jenkins provides a web interface, but build and delivery workflows can also be defined as code using pipeline scripts. This helps teams version, review, and reproduce pipeline changes.
+
+### 13. What are Jenkins plugins?
+**Answer:** Plugins extend Jenkins and help it integrate with tools and services such as Git, build tools, testing tools, code-quality tools, containers, and deployment platforms.
+
+### 14. Why does Jenkins need Java?
+**Answer:** Jenkins is Java-based, so a compatible Java runtime is required to run it. The session notes use Java 21 or later as the installation prerequisite for the demonstrated setup.
+
+### 15. What are the main steps to install Jenkins on an Ubuntu VM?
+**Answer:** Update package lists, install the required Java runtime, add the official Jenkins repository and signing key, update package lists again, install Jenkins, and verify the installation with `jenkins --version`.
+
+### 16. How do you access Jenkins after installation?
+**Answer:** Open `http://<VM-public-IP>:8080` after ensuring the service is running and the VM firewall permits inbound TCP traffic on port 8080. Complete the initial setup using the initial admin password.
+
+### 17. Where is the initial Jenkins administrator password stored?
+**Answer:** On the installation described in the notes, it is stored at `/var/lib/jenkins/secrets/initialAdminPassword`. Read it with appropriate privileges, for example:
+```bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+### 18. How do you check whether Jenkins is running on Linux?
+**Answer:** Use:
+```bash
+sudo systemctl status jenkins
+```
+To start it if needed:
+```bash
+sudo systemctl start jenkins
+```
+
+### 19. How can you check whether port 8080 is listening?
+**Answer:** Run:
+```bash
+sudo ss -lntp | grep ':8080'
+```
+This checks whether a process is listening on port 8080. If Jenkins is listening but the UI is unreachable, check the VM firewall, cloud firewall rules, and the URL.
+
+### 20. What is `.gitignore`, and why is it important?
+**Answer:** `.gitignore` lists files and directories Git should normally ignore when tracking untracked files. It is useful for excluding build output, generated files, and local dependencies. Do not rely on it to remove files already tracked, and never commit secrets or API keys.
+
+---
+
+# Part 2: 20 Scenario-Based Interview Questions and Answers
+
+### 1. A developer pushes directly to `main`, but your team requires code review. How would you prevent this?
+**Answer:** Configure branch protection for `main` and require a pull request before merging. Add required approvals and status checks where appropriate. Test the rules with the team's repository permissions.
+
+### 2. A Pull Request cannot be merged because a required check is failing. What would you do?
+**Answer:** Open the PR checks and identify the failed build or test. Review the logs, reproduce the failure locally if needed, fix the code or pipeline, push the correction, and wait for the check to pass before merging.
+
+### 3. A developer says their push was rejected because the remote branch contains work they do not have locally. What is a sensible first step?
+**Answer:** Fetch or pull the latest changes, review and resolve any conflicts, run tests, and then push again. Avoid using `git push -f` as a quick fix because it can overwrite remote history.
+
+### 4. A commit introduced a bug and you need to undo it while preserving shared history. What would you use?
+**Answer:** Use `git revert <commit-id>` to create a new commit that reverses the target commit's changes. This is generally safer for shared branches than rewriting history.
+
+### 5. A developer accidentally committed a local build directory. How should the team prevent it from happening again?
+**Answer:** Add the directory pattern to `.gitignore`. If the directory is already tracked, remove it from Git's index while keeping the local files, for example with `git rm -r --cached <directory>`, then commit the change. Check the repository for any accidentally committed secrets separately.
+
+### 6. A repository should be private while a contractor works on it, but only that contractor should have access. What would you do?
+**Answer:** Set the repository visibility to private, invite the contractor as a collaborator, grant the minimum required permissions, and verify that the invitation is accepted. Review access when the work ends.
+
+### 7. A team member can view a repository but cannot change settings. Is this necessarily a problem?
+**Answer:** No. Repository permissions can be configured so collaborators have different access levels. Check their assigned role and grant additional permissions only if their responsibilities require them.
+
+### 8. You want a Jenkins job to start shortly after a developer pushes code to GitHub. What integration could you configure?
+**Answer:** Configure a GitHub webhook to notify Jenkins of push events, and configure the Jenkins job or pipeline to respond to those events. Verify endpoint reachability, webhook delivery status, and Jenkins job configuration.
+
+### 9. A Jenkins job is configured with Poll SCM but does not run immediately after a push. Why?
+**Answer:** Poll SCM checks at configured intervals rather than reacting instantly to a push. Confirm the polling schedule, repository URL, credentials, and branch configuration. If near-immediate triggering is needed, consider a webhook.
+
+### 10. A team wants Jenkins to build and test every change before merge. How would you approach it?
+**Answer:** Configure a Jenkins pipeline that checks out the relevant code, runs the build and unit tests, and reports the result back to GitHub. Configure the corresponding status check as required by the protected branch before allowing merges.
+
+### 11. Jenkins is installed, but the browser cannot open `http://<VM-public-IP>:8080`. What should you check first?
+**Answer:** Check in a logical order:
+1. Confirm Jenkins is running with `sudo systemctl status jenkins`.
+2. Check whether port 8080 is listening using `sudo ss -lntp | grep ':8080'`.
+3. Confirm the URL uses `http://` for the demonstrated setup.
+4. Check the cloud firewall or security-group rule for inbound TCP 8080 and any host firewall.
+5. Review Jenkins logs if the service is failing.
+
+### 12. Jenkins stopped after a cloud VM was restarted. How do you troubleshoot it?
+**Answer:** Check the service with `sudo systemctl status jenkins`. If it is stopped, run `sudo systemctl start jenkins`, then verify the service and port. Review service logs and startup configuration if it repeatedly fails.
+
+### 13. Running `cat /var/lib/jenkins/secrets/initialAdminPassword` returns “Permission denied.” What would you do?
+**Answer:** Read the file with appropriate privileges:
+```bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+Avoid changing the file's permissions broadly just to read it.
+
+### 14. The Jenkins service is active and port 8080 is listening, but the UI is still unreachable from your laptop. What next?
+**Answer:** Check whether the VM has a reachable public IP, verify cloud firewall rules allow inbound TCP 8080 from the intended source, and inspect any host firewall or network restrictions. Keep access restricted to trusted IPs rather than opening the port to everyone.
+
+### 15. A company wants to avoid exposing Jenkins to the entire internet during a class or demo. What is a safer setup?
+**Answer:** Restrict inbound TCP 8080 to the instructor's or team's trusted IP range, or access Jenkins through a VPN, bastion, or SSH tunnel. Use strong administrator credentials and avoid leaving a demo VM exposed after the session.
+
+### 16. A student installs Jenkins but does not know how to finish the first-time setup. What steps should they follow?
+**Answer:** Retrieve the initial admin password from `/var/lib/jenkins/secrets/initialAdminPassword` with suitable privileges, enter it in the Jenkins setup page, install the suggested plugins, create administrator credentials, and confirm that the dashboard loads.
+
+### 17. A build works on one developer's laptop but fails in Jenkins. What should you investigate?
+**Answer:** Compare the runtime and tool versions, environment variables, dependencies, working directory, credentials, and commands used locally versus in the pipeline. Read the Jenkins console output and make the build steps reproducible.
+
+### 18. A team is considering force-pushing to fix a shared branch after a bad commit. What should you recommend?
+**Answer:** First understand whether the commit is shared and whether history rewriting is allowed. For a shared branch, `git revert <commit-id>` is usually the safer option because it preserves history. Use force push only with a clear plan, authorization, and awareness of its impact on other collaborators.
+
+### 19. A company wants to review bugs and enhancement requests without adopting another tool immediately. Which GitHub feature from the session could help?
+**Answer:** GitHub Issues can track bugs, enhancement requests, and support tasks using labels, assignees, and milestones. Teams can use it for basic tracking, while more complex workflows may still need a dedicated project-management tool.
+
+### 20. A team wants to show consistent GitHub activity to recruiters. What is a useful habit, and what should they avoid?
+**Answer:** Maintain a real repository of notes, labs, or projects and commit meaningful progress regularly. The session suggested aiming for 10–15 commits per month. Avoid empty or meaningless commits just to create green squares; the quality and clarity of the work matter more.
+
+---
+
+# Quick Revision Checklist
+
+- [ ] Explain public vs. private repositories and collaborator permissions.
+- [ ] Explain pull requests and branch protection rules.
+- [ ] Compare GitHub webhooks and Jenkins Poll SCM.
+- [ ] Explain CI and why automated build/test feedback matters.
+- [ ] Describe why Jenkins is used and how plugins extend it.
+- [ ] List the main Jenkins installation steps on Ubuntu.
+- [ ] Find the initial admin password and complete first-time setup.
+- [ ] Troubleshoot Jenkins service, port 8080, and cloud firewall issues.
+- [ ] Explain safe use of `git revert`, caution around force push, and `.gitignore`.
+- [ ] Describe how Jenkins results can be used as required status checks.
+
+---
+
+**Note:** These questions are based on the supplied session notes. Detailed multi-branch deployment pipelines and deeper Kubernetes architecture were listed as topics for future sessions, so they are not treated here as fully covered implementation material.
+
